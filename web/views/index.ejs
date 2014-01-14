@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="abode">
+	<head>
+		<title>abode.me</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta charset="utf-8">
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.8/angular.min.js"></script>
+		<script
+			src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.8/angular-resource.min.js"></script>
+		<script type="text/javascript" charset="utf-8">
+			var app = angular.module('abode', [ 'ngResource' ]);
+
+			app.factory('Countries', ['$resource', function($resource)
+			{
+				return $resource('/countries', {});
+			}]);
+
+			app.factory('Types', ['$resource', function($resource)
+			{
+				return $resource('/types', {});
+			}]);
+
+			app.factory('Properties', ['$resource', function($resource)
+			{
+				return $resource('/properties', {});
+			}]);
+
+			app.controller('MainCtrl', function($scope, Countries, Types, Properties)
+			{
+				$scope.countries = Countries.query();
+				$scope.types = Types.query();
+
+				$scope.filter = {
+					"keywords": '',
+					"country[]": [],
+					"property_type[]": [],
+					"page": 0,
+					"count": 100
+				};
+
+				$scope.properties = [];
+
+				$scope.search = function()
+				{
+					console.log($scope.filter);
+					$scope.properties = Properties.query($scope.filter);
+				};
+
+				$scope.next = function()
+				{
+					$scope.filter.page++;
+					$scope.search();
+				};
+
+				$scope.prev = function()
+				{
+					if ($scope.filter.page > 0)
+					{
+						$scope.filter.page--;
+						$scope.search();
+					}
+				};
+
+				$scope.search();
+			});
+		</script>
+		<link rel="stylesheet" href="/bootstrap.min.css" media="screen">
+		<style type="text/css" media="all">
+			.container-full-width {
+				width: 100%;
+			}
+			.push-down {
+				margin-top: 60px;
+			}
+			.disabled {
+				cursor: not-allowed;
+			}
+		</style>
+	</head>
+	<body ng-controller="MainCtrl">
+
+		<div class="navbar navbar-default navbar-fixed-top">
+			<div class="container-full-width container">
+				<div class="navbar-header">
+					<a href="/" class="navbar-brand">abode.me</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="container-full-width container push-down">
+
+			<div class="row">
+
+				<div class="col-xs-12 col-md-9">
+					<table class="table table-hover">
+						<thead>
+							<tr style="border-top: 0">
+								<th colspan="2">Description</th>
+								<th>Price</th>
+								<th>Bedrooms</th>
+								<th>Broadband average</th>
+								<th>Broadband connections</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="p in properties">
+								<td>
+									<img ng-src="{{ p.thumbnail_url }}" width="115" />
+								</td>
+								<td>
+									<a
+										href="{{ p.details_url }}"
+										target="_blank"
+										class="address">
+										{{ p.displayable_address }}
+									</a> <span class="label
+										label-danger">{{ p.status }}</span>
+
+									<p class="description"> 
+										{{ p.description }}
+									</p>
+								</td>
+								<td class="center">{{ p.price }}</td>
+								<td class="center">{{ p.num_bedrooms }}</td>
+								<td class="center">{{ p.broadband_average }}</td>
+								<td class="center">{{ p.broadband_connections }}</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<ul class="pager">
+						<li><a ng-click="prev()" ng-class="{disabled: (filter.page < 1)}">Previous</a></li>
+						<li><a ng-click="next()">Next</a></li>
+					</ul>
+
+				</div>
+
+				<div class="col-xs-12 col-md-3">
+
+					<form role="form" style="margin-bottom: 20px">
+						<div class="form-group">
+							<label for="keywords">Keywords</label>
+							<input type="text" class="form-control" id="keywords"
+							placeholder="keywords" ng-model="filter.keywords" />
+						</div>
+
+						<div class="form-group">
+							<label for="property_type">Property type</label>
+							<select multiple class="form-control"
+								id="property_type"
+								ng-options="m.property_type as m.property_type for m in types"
+								ng-model="filter['property_type[]']">
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="country">Country</label>
+							<select multiple class="form-control"
+								id="country"
+								ng-options="m.country as m.country for m in countries"
+								ng-model="filter['country[]']">
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="count">Results per page</label>
+							<input type="text" class="form-control" id="count"
+							ng-model="filter.count" placeholder="Results per page" />
+						</div>
+
+						<button type="submit" class="btn btn-sm btn-primary"
+							ng-click="search()">Filter</button>
+						<button type="reset" class="btn btn-sm btn-danger">Reset</button>
+					</form>
+					<div>
+						<blockquote class="pull-right">
+							<p>The most pointless web app in existence.</p>
+							<small>The developer <cite title="Source Title">Shortly after
+									finishing it.</cite></small>
+						</blockquote>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+
+	</body>
+</html>
